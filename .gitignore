@@ -1,0 +1,6 @@
+# Ignore MacOS files
+.DS_Store
+
+# Ingore image and video folders
+srcvideos
+faces
