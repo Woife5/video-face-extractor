@@ -73,6 +73,7 @@ for i in input_file_names:
                 point_3rd = (left_eye[0], right_eye[1])
                 direction = 1 #rotate inverse direction of clock
 
+            # Calculate the amount by which the image needs to be rotated
             a = euclidean_distance(left_eye, point_3rd)
             b = euclidean_distance(right_eye, left_eye)
             c = euclidean_distance(right_eye, point_3rd)
@@ -84,25 +85,35 @@ for i in input_file_names:
             if direction == -1:
                 angle = 90 - angle
 
+            # Scale percent, b is the distance between the eyes. This ensures a constant distance between the eyes
+            # and therefore ensure that the face is always aligned.
             percent = 1 / (b / 40)
 
-            new_left_eye = tuple(i*percent for i in left_eye)
-            new_right_eye = tuple(i*percent for i in right_eye)
-
+            # Calculate the amount by which the image needs to be scaled
             width = int(frame.shape[1] * percent)
             height = int(frame.shape[0] * percent)
             dim = (width, height)
 
+            # Create a copy of the image and resize it
             new_img = cv2.resize(frame, dim)
 
-            new_img = Image.fromarray(new_img)
-            new_img = np.array(new_img.rotate(direction * angle))
+            # Scale the eye coordinates
+            new_left_eye = tuple(i*percent for i in left_eye)
+            new_right_eye = tuple(i*percent for i in right_eye)
 
+            # Calculate the center between the two eyes
             center_x=(int)((new_right_eye[0] + new_left_eye[0]) / 2)
             center_y=(int)((new_right_eye[1] + new_left_eye[1]) / 2)
 
+            # Rotate the image
+            new_img = Image.fromarray(new_img)
+            new_img = np.array(new_img.rotate(direction * angle, center=(center_x, center_y)))
+
+            # Crop the image to 100x100 pixels.
             new_img = new_img[center_y-30:center_y+70, center_x-50:center_x+50]
 
+            # If the image does not have 100x100 pixels, skip it
+            # This usually happens when the face is too close to an edge of the screen
             if(len(new_img) < 100 or len(new_img[0]) < 100):
                 print("File {} at frame {}: Image too small. Skipping...".format(i, frame_number))
                 errorcount += 1
