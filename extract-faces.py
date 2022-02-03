@@ -34,6 +34,11 @@ def euclidean_distance(a, b):
     x2 = b[0]; y2 = b[1]
     return math.sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)))
 
+def find_eye_center(face, landmark):
+    eye = tuple([(face[landmark][0][0] + face[landmark][1][0]), face[landmark][0][1] + face[landmark][1][1]])
+    eye = tuple([(int)(eye[0]/2), (int)(eye[1]/2)])
+    return eye
+
 for i in input_file_names:
 
     # Open the input movie file
@@ -41,7 +46,6 @@ for i in input_file_names:
     length = int(input_movie.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Initialize some variables
-    face_locations = []
     frame_number = 0
 
     current_path = os.getcwd()
@@ -60,12 +64,10 @@ for i in input_file_names:
 
         # Align and save the face
         for face in face_landmarks:
-            right_eye = tuple([(face["right_eye"][0][0] + face["right_eye"][1][0]), face["right_eye"][0][1] + face["right_eye"][1][1]])
-            right_eye = tuple([(int)(right_eye[0]/2), (int)(right_eye[1]/2)])
+            right_eye = find_eye_center(face, "right_eye")
+            left_eye = find_eye_center(face, "left_eye")
 
-            left_eye = tuple([(face["left_eye"][0][0] + face["left_eye"][1][0]), face["left_eye"][0][1] + face["left_eye"][1][1]])
-            left_eye = tuple([(int)(left_eye[0]/2), (int)(left_eye[1]/2)])
-
+            # Check which direction needs to be rotated and set a third point to get a triangle (with a 90° angle)
             if left_eye[1] > right_eye[1]:
                 point_3rd = (right_eye[0], left_eye[1])
                 direction = -1 #rotate same direction to clock
@@ -101,7 +103,7 @@ for i in input_file_names:
             new_left_eye = tuple(i*percent for i in left_eye)
             new_right_eye = tuple(i*percent for i in right_eye)
 
-            # Calculate the center between the two eyes
+            # Calculate the center between the two eyes (after being scaled)
             center_x=(int)((new_right_eye[0] + new_left_eye[0]) / 2)
             center_y=(int)((new_right_eye[1] + new_left_eye[1]) / 2)
 
